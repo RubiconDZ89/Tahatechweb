@@ -25,13 +25,16 @@
             <span id="closeModal" class="close">&times;</span>
             <h2 id="playerTitle">Titre de la vidéo</h2>
             
-            <!-- Sélecteur de sources ou d'épisodes si c'est une série -->
-            <div id="seasonSelector" class="season-selector" style="display: none; margin-bottom: 15px;">
-                <select id="seasonSelect" style="padding: 8px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;"></select>
-                <select id="episodeSelect" style="padding: 8px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;"></select>
+            <!-- Sélecteur de toutes les sources web disponibles -->
+            <div id="sourceSelector" class="source-tabs" style="display: none;"></div>
+
+            <!-- Sélecteur de saisons et épisodes -->
+            <div id="seasonSelector" class="season-selector" style="display: none;">
+                <select id="seasonSelect"></select>
+                <select id="episodeSelect"></select>
             </div>
 
-            <p id="loaderMessage">Chargement du lecteur en français...</p>
+            <p id="loaderMessage">Chargement du lecteur...</p>
             
             <div id="xrayPanel" class="xray-panel">
                 <h3>Casting (X-Ray)</h3>
