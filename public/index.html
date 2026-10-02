@@ -1,49 +1,45 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tahatech Stream</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tahatech Stream</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header>
+        <h1 class="logo">Tahatech Stream</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Rechercher un film ou une série...">
+            <button id="searchBtn">Rechercher</button>
+        </div>
+    </header>
+    
+    <main>
+        <h2 id="gridTitle">Tendances de la semaine (VF / VOSTFR)</h2>
+        <div id="mediaGrid" class="media-grid"></div>
+    </main>
+    
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal" class="close">&times;</span>
+            <h2 id="playerTitle">Titre de la vidéo</h2>
+            
+            <!-- Sélecteur de sources ou d'épisodes si c'est une série -->
+            <div id="seasonSelector" class="season-selector" style="display: none; margin-bottom: 15px;">
+                <select id="seasonSelect" style="padding: 8px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;"></select>
+                <select id="episodeSelect" style="padding: 8px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;"></select>
+            </div>
 
-  <header class="navbar">
-    <div class="logo">TAHA<span>TECH</span></div>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Rechercher un film ou une série...">
-      <button id="searchBtn">🔍</button>
+            <p id="loaderMessage">Chargement du lecteur en français...</p>
+            
+            <div id="xrayPanel" class="xray-panel">
+                <h3>Casting (X-Ray)</h3>
+                <div id="xrayCast" class="xray-cast"></div>
+            </div>
+        </div>
     </div>
-  </header>
-
-  <main class="container">
-    <section class="section-title" id="continueWatchingSection" style="display: none;">
-      <h2>Continuer à regarder</h2>
-      <div class="media-grid" id="continueGrid"></div>
-    </section>
-
-    <section class="section-title">
-      <h2 id="gridTitle">Tendances de la semaine</h2>
-      <div class="media-grid" id="mediaGrid"></div>
-    </section>
-  </main>
-
-  <div class="player-modal" id="playerModal">
-    <div class="player-wrapper">
-      <button class="close-btn" id="closeModal">← Retour</button>
-      
-      <div id="loaderMessage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; z-index: 5;"></div>
-      
-      <video id="mainVideo" controls></video>
-
-      <div class="xray-panel" id="xrayPanel">
-        <h3>Dans cette œuvre</h3>
-        <div class="xray-cast" id="xrayCast">Chargement du casting...</div>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
+    
+    <script src="app.js"></script>
 </body>
 </html>
