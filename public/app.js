@@ -1,5 +1,5 @@
 const API_TMDB = "/api/tmdb";
-const API_SCRAPER = "https://tahatech-scraper.onrender.com/api/extract";
+const API_SCRAPER = "https://tahatechscraper.onrender.com";
 
 const videoPlayer = document.getElementById("mainVideo");
 const xrayPanel = document.getElementById("xrayPanel");
