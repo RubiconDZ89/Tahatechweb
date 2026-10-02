@@ -5,12 +5,26 @@ const xrayCast = document.getElementById("xrayCast");
 const loaderMessage = document.getElementById("loaderMessage");
 const gridTitle = document.getElementById("gridTitle");
 const mediaGrid = document.getElementById("mediaGrid");
+const sourceSelector = document.getElementById("sourceSelector");
 const seasonSelector = document.getElementById("seasonSelector");
 const seasonSelect = document.getElementById("seasonSelect");
 const episodeSelect = document.getElementById("episodeSelect");
 
 let currentMediaId = null;
 let currentMediaType = null;
+let currentSeason = 1;
+let currentEpisode = 1;
+
+// Liste complète et élargie de tous les fournisseurs web disponibles
+const STREAM_SOURCES = [
+    { name: "VidLink", getUrl: (type, id, s, e) => type === 'tv' ? `https://vidlink.pro/tv/${id}/${s}/${e}` : `https://vidlink.pro/movie/${id}` },
+    { name: "VidSrc", getUrl: (type, id, s, e) => type === 'tv' ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&ep=${e}` : `https://vidsrc.me/embed/movie?tmdb=${id}` },
+    { name: "Embed.su", getUrl: (type, id, s, e) => type === 'tv' ? `https://embed.su/embed/tv/${id}/${s}/${e}` : `https://embed.su/embed/movie/${id}` },
+    { name: "MultiEmbed", getUrl: (type, id, s, e) => type === 'tv' ? `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1` },
+    { name: "VidSrc.xyz", getUrl: (type, id, s, e) => type === 'tv' ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&ep=${e}` : `https://vidsrc.xyz/embed/movie?tmdb=${id}` },
+    { name: "AutoEmbed", getUrl: (type, id, s, e) => type === 'tv' ? `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}` : `https://player.autoembed.cc/embed/movie/${id}` },
+    { name: "2Embed", getUrl: (type, id, s, e) => type === 'tv' ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` : `https://www.2embed.cc/embed/${id}` }
+];
 
 document.addEventListener("DOMContentLoaded", () => {
     loadTrending();
@@ -29,11 +43,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("closeModal").addEventListener("click", cleanPlayer);
 
     seasonSelect.addEventListener("change", (e) => {
-        loadEpisodes(currentMediaId, e.target.value);
+        currentSeason = e.target.value;
+        loadEpisodes(currentMediaId, currentSeason);
     });
 
     episodeSelect.addEventListener("change", (e) => {
-        updatePlayerEmbed(currentMediaId, currentMediaType, seasonSelect.value, e.target.value);
+        currentEpisode = e.target.value;
+        renderActiveSourcePlayer();
     });
 });
 
@@ -83,16 +99,17 @@ function renderGrid(items, container) {
 async function openMedia(id, type, title) {
     currentMediaId = id;
     currentMediaType = type;
+    currentSeason = 1;
+    currentEpisode = 1;
     
     const modal = document.getElementById("playerModal");
     document.getElementById("playerTitle").innerText = title;
     modal.classList.add("active");
     
     loaderMessage.style.display = "block";
-    loaderMessage.innerText = "Chargement du lecteur français...";
+    loaderMessage.innerText = "Chargement des sources et du casting...";
     xrayCast.innerHTML = "";
     
-    // 1. Récupération du casting (X-Ray)
     try {
         const castRes = await fetch(`${API_TMDB}?endpoint=/${type}/${id}/credits`);
         const castData = await castRes.json();
@@ -101,7 +118,6 @@ async function openMedia(id, type, title) {
         console.error("Erreur casting:", err);
     }
 
-    // 2. Gestion des saisons si c'est une série TV
     if (type === 'tv') {
         seasonSelector.style.display = "flex";
         try {
@@ -113,14 +129,14 @@ async function openMedia(id, type, title) {
         }
     } else {
         seasonSelector.style.display = "none";
-        updatePlayerEmbed(id, type, 1, 1);
+        buildSourceTabs(0);
     }
 }
 
 async function populateSeasons(seasons) {
     seasonSelect.innerHTML = "";
     seasons.forEach(season => {
-        if (season.season_number === 0) return; // Ignore les hors-séries/specials
+        if (season.season_number === 0) return;
         const opt = document.createElement("option");
         opt.value = season.season_number;
         opt.innerText = `Saison ${season.season_number}`;
@@ -143,22 +159,39 @@ async function loadEpisodes(id, seasonNum) {
             episodeSelect.appendChild(opt);
         });
         if (data.episodes && data.episodes.length > 0) {
-            updatePlayerEmbed(id, 'tv', seasonNum, data.episodes[0].episode_number);
+            currentEpisode = data.episodes[0].episode_number;
+            buildSourceTabs(0);
         }
     } catch (err) {
         console.error("Erreur épisodes:", err);
     }
 }
 
-function updatePlayerEmbed(id, type, season, episode) {
+function buildSourceTabs(activeIndex = 0) {
+    sourceSelector.style.display = "flex";
+    sourceSelector.innerHTML = "";
+
+    STREAM_SOURCES.forEach((source, index) => {
+        const btn = document.createElement("button");
+        btn.className = `source-btn ${index === activeIndex ? 'active' : ''}`;
+        btn.innerText = source.name;
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".source-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            loadEmbedPlayer(index);
+        });
+        sourceSelector.appendChild(btn);
+    });
+
+    loadEmbedPlayer(activeIndex);
+}
+
+function loadEmbedPlayer(sourceIndex) {
     const existingIframe = document.getElementById("secureIframe");
     if (existingIframe) existingIframe.remove();
 
-    // Mécanisme auto-embed par ID TMDB privilégiant les sources francophones (Multiembed / VidLink configurés en VF)
-    let embedUrl = `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`;
-    if (type === 'tv') {
-        embedUrl += `&s=${season}&e=${episode}`;
-    }
+    const sourceFn = STREAM_SOURCES[sourceIndex].getUrl;
+    const embedUrl = sourceFn(currentMediaType, currentMediaId, currentSeason, currentEpisode);
 
     const iframe = document.createElement("iframe");
     iframe.id = "secureIframe";
@@ -193,5 +226,6 @@ function cleanPlayer() {
     document.getElementById("playerModal").classList.remove("active");
     const existingIframe = document.getElementById("secureIframe");
     if (existingIframe) existingIframe.remove();
+    sourceSelector.style.display = "none";
     seasonSelector.style.display = "none";
 }
