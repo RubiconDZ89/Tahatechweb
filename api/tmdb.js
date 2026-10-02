@@ -1,32 +1,22 @@
 export default async function handler(req, res) {
+  const { endpoint, query = '' } = req.query;
   const apiKey = process.env.TMDB_API_KEY;
   
-  if (!apiKey) {
-    return res.status(500).json({ error: "Clé TMDB_API_KEY manquante sur Vercel." });
+  if (!endpoint) {
+    return res.status(400).json({ error: "Endpoint manquant." });
   }
 
-  const { endpoint, ...queryParams } = req.query;
-  const targetEndpoint = endpoint || "/trending/all/week";
-  const targetUrl = new URL(`https://api.themoviedb.org/3${targetEndpoint}`);
-  
-  Object.keys(queryParams).forEach(key => {
-    targetUrl.searchParams.set(key, queryParams[key]);
-  });
-
-  targetUrl.searchParams.set("api_key", apiKey);
-  if (!targetUrl.searchParams.has("language")) {
-    targetUrl.searchParams.set("language", "fr-FR");
+  // On force la langue en français (fr-FR) pour récupérer les titres et résumés en VF
+  let tmdbUrl = `https://api.themoviedb.org/3${endpoint}?api_key=${apiKey}&language=fr-FR`;
+  if (query) {
+    tmdbUrl += `&query=${encodeURIComponent(query)}`;
   }
 
   try {
-    const response = await fetch(targetUrl.toString(), {
-      headers: { "Accept": "application/json" }
-    });
+    const response = await fetch(tmdbUrl);
     const data = await response.json();
-    
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(response.status).json(data);
+    res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Erreur lors de la communication avec TMDB." });
   }
 }
