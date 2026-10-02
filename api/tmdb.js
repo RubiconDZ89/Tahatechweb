@@ -6,7 +6,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Endpoint manquant." });
   }
 
-  // On force la langue en français (fr-FR) pour récupérer les titres et résumés en VF
   let tmdbUrl = `https://api.themoviedb.org/3${endpoint}?api_key=${apiKey}&language=fr-FR`;
   if (query) {
     tmdbUrl += `&query=${encodeURIComponent(query)}`;
